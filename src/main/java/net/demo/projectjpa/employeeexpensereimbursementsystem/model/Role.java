@@ -15,7 +15,7 @@ public class Role {
 
     private boolean status;
 
-    public boolean isStatus() {
+    public boolean getStatus() {
         return status;
     }
 

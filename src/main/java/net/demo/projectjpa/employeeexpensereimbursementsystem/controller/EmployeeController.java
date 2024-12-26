@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @RestController
 @RequestMapping("/employees")
 public class EmployeeController {
@@ -21,26 +24,52 @@ public class EmployeeController {
         this.expenseService = expenseService;
     }
 
-//@PostMapping("/{employeeId}")
-//public ResponseEntity<Expense> submitExpense(@PathVariable int employeeId,@RequestBody Expense expense) {
-//    // Call the service layer to handle business logic
-//    Expense savedExpense = expenseService.submitExpense(employeeId,expense);
-//    return ResponseEntity.ok(savedExpense);
-//}
-@PostMapping("/{employeeId}")
-public ResponseEntity<Expense> submitExpense(@PathVariable int employeeId, @RequestBody Expense expense) {
-    try {
-        // Call the service layer to handle business logic
-        Expense savedExpense = expenseService.submitExpense(employeeId, expense);
-        return ResponseEntity.ok(savedExpense);
-    } catch (EntityNotFoundException ex) {
-        // Handle cases where the entity is not found
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-    } catch (Exception ex) {
-        // Handle any other unexpected exceptions
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-    }
-}
+    /**
+     * employee submit the expense request using his Id
+     * @param employeeId
+     * @param expense
+     * @return
+     */
 
+    @PostMapping("/{employeeId}")
+    public ResponseEntity<?> submitExpense(@PathVariable int employeeId, @RequestBody Expense expense) {
+        try {
+            // Call the service layer to handle business logic
+            Expense savedExpense = expenseService.submitExpense(employeeId, expense);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedExpense); // Use 201 Created for new resources
+        } catch (EntityNotFoundException ex) {
+            // Return a meaningful error message for entity not found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            // Handle unexpected exceptions with a detailed error message
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint to get expenses by employee ID and date range.
+     *
+     * @param employeeId the ID of the employee
+     * @param startDate  the start date of the range
+     * @param endDate    the end date of the range
+     * @return a list of expenses within the date range for the given employee
+     */
+    @GetMapping("/expenses/filter")
+    public ResponseEntity<List<Expense>> getExpensesByEmployeeAndDateRange(
+            @RequestParam int employeeId,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+
+        // Parse the date strings to LocalDate
+        LocalDate start = LocalDate.parse(startDate);  // e.g., "2024-01-01"
+        LocalDate end = LocalDate.parse(endDate);  // e.g., "2024-12-31"
+
+        // Get the filtered expenses
+        List<Expense> expenses = expenseService.getExpensesByEmployeeIdAndDateRange(employeeId, start, end);
+
+        // Return the expenses as the response
+        return ResponseEntity.ok(expenses);
+    }
 
 }
