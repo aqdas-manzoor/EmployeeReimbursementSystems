@@ -1,7 +1,6 @@
 package net.demo.projectjpa.employeeexpensereimbursementsystem.controller;
 
 import jakarta.persistence.EntityNotFoundException;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Employee;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Expense;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseStatus;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.service.EmployeeService;
