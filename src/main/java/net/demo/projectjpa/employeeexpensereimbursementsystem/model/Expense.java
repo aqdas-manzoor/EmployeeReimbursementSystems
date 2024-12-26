@@ -11,6 +11,7 @@ public class Expense {
      */
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
@@ -18,14 +19,19 @@ public class Expense {
     private int amount;
 
     private String description;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Categories category;
+
     @ManyToOne
     @JoinColumn(name = "status_id", nullable = false)
     private ExpenseStatus status;
+
+    @Column(name = "submit_date")  // Explicitly map to "submit_date" column in the database
     private LocalDateTime submitDate;
 
+    @Column(name = "approved_date")  // Explicitly map to "approved_date" column in the database
     private LocalDateTime approvedDate;
 
     public int getId() {
@@ -43,7 +49,6 @@ public class Expense {
     public void setStatus(ExpenseStatus status) {
         this.status = status;
     }
-
 
     public Employee getEmployee() {
         return employee;
