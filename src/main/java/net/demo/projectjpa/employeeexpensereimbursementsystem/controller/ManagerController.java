@@ -3,6 +3,7 @@ package net.demo.projectjpa.employeeexpensereimbursementsystem.controller;
 import jakarta.persistence.EntityNotFoundException;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Expense;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseStatus;
+import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseValidationRequest;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,7 @@ public class ManagerController {
 
     /**
      * PATCH endpoint to update the status of an expense by id
+     *
      * @param expenseId
      * @param newStatus
      * @return
@@ -74,4 +76,11 @@ public class ManagerController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    @PostMapping("employees/validateExpense")
+    public ResponseEntity<Boolean> validateExpense(@RequestBody ExpenseValidationRequest request) {
+        boolean isValid = employeeService.validateExpenseLimit(request.getRoleId(), request.getCategoryPackageId(), request.getExpenseAmount());
+        return ResponseEntity.ok(isValid);
+    }
 }
+

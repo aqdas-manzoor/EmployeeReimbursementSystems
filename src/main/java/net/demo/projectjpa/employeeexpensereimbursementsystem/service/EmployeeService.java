@@ -1,14 +1,8 @@
 package net.demo.projectjpa.employeeexpensereimbursementsystem.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Categories;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Employee;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Expense;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseStatus;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.repository.CategoriesRepository;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.repository.EmployeeRepository;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.repository.ExpenseRepository;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.repository.ExpenseStatusRepository;
+import net.demo.projectjpa.employeeexpensereimbursementsystem.model.*;
+import net.demo.projectjpa.employeeexpensereimbursementsystem.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
@@ -25,13 +21,17 @@ public class EmployeeService {
     private final ExpenseStatusRepository expenseStatusRepository;
     private final CategoriesRepository categoriesRepository;
     private final EmployeeRepository employeeRepository;
+    private final CategoryPackageRepository categoryPackageRepository;
+    private final RoleCategoryPackageRepository roleCategoryPackageRepository;
 
     @Autowired
-    public EmployeeService(ExpenseRepository expenseRepository, ExpenseStatusRepository expenseStatusRepository, CategoriesRepository categoriesRepository, EmployeeRepository employeeRepository) {
+    public EmployeeService(ExpenseRepository expenseRepository, ExpenseStatusRepository expenseStatusRepository, CategoriesRepository categoriesRepository, EmployeeRepository employeeRepository, CategoryPackageRepository categoryPackageRepository, RoleCategoryPackageRepository roleCategoryPackageRepository) {
         this.expenseRepository = expenseRepository;
         this.expenseStatusRepository = expenseStatusRepository;
         this.categoriesRepository = categoriesRepository;
         this.employeeRepository = employeeRepository;
+        this.categoryPackageRepository = categoryPackageRepository;
+        this.roleCategoryPackageRepository = roleCategoryPackageRepository;
     }
 
     /**
@@ -155,6 +155,16 @@ public class EmployeeService {
         // Save the updated expense
         return expenseRepository.save(expense);
     }
+
+    public boolean validateExpenseLimit(int roleId, int categoryPackageId, int expenseAmount) {
+        Optional<RoleCategoryPackage> roleCategoryPackage = roleCategoryPackageRepository.findById(categoryPackageId);
+        if (roleCategoryPackage.isPresent() &&
+                roleCategoryPackage.get().getRole().getId() == roleId) {
+            return expenseAmount <= roleCategoryPackage.get().getCategoryPackage().getExpenseLimit();
+        }
+        return false;
+    }
+
 
     /**
      * Get expenses by employeeId and a date range (only considering the date portion).
