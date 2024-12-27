@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/manager")
@@ -24,18 +25,19 @@ public class ManagerController {
     }
 
     /**
-     * Retrieves all employees along with their expense details.
+     * Retrieves all employees along with their pending expense details.
      *
      * @return a list of objects containing employee and expense information
      */
+    // Get only pending status expenses
     @GetMapping("/employees/expenses")
-    public ResponseEntity<List<Expense>> getAllEmployees() {
-        // Call the service to retrieve all employees with their expense details
-        List<Expense> expenses = employeeService.getAllEmployeesWithExpenses();
-
-        // Return the list of employees along with their expenses
-        return ResponseEntity.ok(expenses);
+    public ResponseEntity<List<Expense>> getPendingExpenses() {
+        List<Expense> pendingExpenses = employeeService.getAllEmployeesWithExpenses().stream()
+                .filter(expense -> expense.getStatus() != null && "Pending".equalsIgnoreCase(expense.getStatus().getName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(pendingExpenses);
     }
+
 
     /**
      * Retrieves all expenses for employees filtered by the given status.
