@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,20 +42,16 @@ public class EmployeeService {
      * @return
      */
     public Expense submitExpense(int employeeId, Expense expense) {
-        // Fetch the employee by ID, throw exception if not found
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found with ID: " + employeeId));
 
-        // Validate the employee's role status (assuming 'status' is a boolean)
         if (!employee.getRole().getStatus()) {
             throw new IllegalStateException("Employee role is inactive. Cannot submit expense.");
         }
 
-        // Fetch the category by ID, throw exception if not found
         Categories category = categoriesRepository.findById(expense.getCategory().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + expense.getCategory().getId()));
 
-        // Fetch the default expense status by hardcoded ID (e.g., 1), throw exception if not found
         ExpenseStatus status = expenseStatusRepository.findById(1)
                 .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: 1"));
 
@@ -66,18 +60,21 @@ public class EmployeeService {
         expense.setCategory(category);
         expense.setStatus(status);
 
-        // Set the submit date
         expense.setSubmitDate(LocalDateTime.now());
 
-        // Set approved date to null by default
         expense.setApprovedDate(null);
 
-        // Save the expense to the database
         return expenseRepository.save(expense);
+    }
+    public CategoryPackage createCategoryPackage(CategoryPackage categoryPackage) {
+        return categoryPackageRepository.save(categoryPackage);
+    }
+
+    public RoleCategoryPackage saveRoleCategoryPackage(RoleCategoryPackage roleCategoryPackage) {
+        return roleCategoryPackageRepository.save(roleCategoryPackage);
     }
 
     public List<Expense> getAllEmployeesWithExpenses() {
-        // Fetch all employees from the repository
         List<Expense> expense = expenseRepository.findAll();
         return expense;
     }
@@ -92,24 +89,18 @@ public class EmployeeService {
         // Fetch all statuses by the provided name
         List<ExpenseStatus> statuses = expenseStatusRepository.findByName(statusName);
 
-        // If no statuses are found, throw an exception
         if (statuses.isEmpty()) {
             throw new EntityNotFoundException("Expense Status not found with name: " + statusName);
         }
 
-        // Create a list to store expenses that match any of the found statuses
         List<Expense> allExpenses = new ArrayList<>();
 
-        // Iterate through all the statuses and fetch the expenses for each status
         for (ExpenseStatus status : statuses) {
-            // For each status, find all the expenses associated with it
             List<Expense> expenses = expenseRepository.findByStatus(status);
 
-            // Add the found expenses to the list
             allExpenses.addAll(expenses);
         }
 
-        // Return the list of expenses that match any of the statuses
         return allExpenses;
     }
 
@@ -125,34 +116,24 @@ public class EmployeeService {
      * @throws IllegalArgumentException if the status ID is invalid
      */
     public Expense updateExpenseStatus(int expenseId, ExpenseStatus newStatus) {
-        // Fetch the expense by ID, throw exception if not found
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new EntityNotFoundException("Expense not found with ID: " + expenseId));
 
-        // Fetch the new status by ID, throw exception if not found
         ExpenseStatus status = expenseStatusRepository.findById(newStatus.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: " + newStatus.getId()));
-
-        // Check if the status ID is valid (1: Pending, 2: Approved, 3: Rejected)
         if (newStatus.getId() < 1 || newStatus.getId() > 3) {
             throw new IllegalArgumentException("Invalid status ID. Allowed values are 1 (Pending), 2 (Approved), or 3 (Rejected).");
         }
 
-        // If the status is "approved" (ID 2), set the approvedDate to the current date
         if (status.getId() == 2) {
             expense.setApprovedDate(LocalDateTime.now());
         } else if (status.getId() == 3) {
-            // Leave the approvedDate as null for rejected status
             expense.setApprovedDate(null);
         } else {
-            // If status is "pending" (ID 1), do nothing to the approvedDate
             expense.setApprovedDate(null);
         }
 
-        // Set the new status
         expense.setStatus(status);
-
-        // Save the updated expense
         return expenseRepository.save(expense);
     }
 
@@ -175,10 +156,53 @@ public class EmployeeService {
      * @return a list of expenses within the date range for the given employee
      */
     public List<Expense> getExpensesByEmployeeIdAndDateRange(int employeeId, LocalDate startDate, LocalDate endDate) {
-        // Convert LocalDate to LocalDateTime
         LocalDateTime startDateTime = startDate.atStartOfDay();  // Set time to 00:00:00
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59, 999999999);  // Set time to 23:59:59.999
-        // Use the repository to fetch data
         return expenseRepository.findByEmployeeIdAndDateRange(employeeId, startDateTime, endDateTime);
+    }
+
+    /**
+     * Get expense history and remaining amount by category for the given employee
+     *
+     * @param employeeId the ID of the employee
+     * @return list of categories with history and remaining amounts
+     * Fetch the employee by ID, Fetch the employee's role,
+     * Fetch role-based category packages using the role's ID
+     * Fetch all expenses for the employee , Group expenses by category ID and calculate the total submitted amount for each category
+     */
+    public List<Map<String, Object>> getEmployeeHistoryByCategory(int employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found with ID: " + employeeId));
+
+        Role role = employee.getRole();
+
+        List<RoleCategoryPackage> roleCategoryPackages = roleCategoryPackageRepository.findByRoleId(role.getId());
+
+        List<Expense> expenses = expenseRepository.findByEmployeeId(employeeId);
+        Map<Integer, Integer> categoryExpenseMap = expenses.stream()
+                .collect(Collectors.groupingBy(expense -> expense.getCategory().getId(),
+                        Collectors.summingInt(Expense::getAmount)));
+
+        return roleCategoryPackages.stream().map(roleCategoryPackage -> {
+            CategoryPackage categoryPackage = roleCategoryPackage.getCategoryPackage();
+            int categoryId = categoryPackage.getCategory().getId();
+            String categoryName = categoryPackage.getCategory().getName();
+            int expenseLimit = categoryPackage.getExpenseLimit();
+
+            int totalSubmittedAmount = categoryExpenseMap.getOrDefault(categoryId, 0);
+
+            int remainingAmount = expenseLimit - totalSubmittedAmount;
+
+            Map<String, Object> categoryHistory = new HashMap<>();
+            categoryHistory.put("categoryName", categoryName);
+            categoryHistory.put("totalSubmittedAmount", totalSubmittedAmount);
+            categoryHistory.put("remainingAmount", remainingAmount);
+
+            if (remainingAmount < 0) {
+                categoryHistory.put("message", "You have exceeded the expense limit for the " + categoryName + " category.");
+            }
+
+            return categoryHistory;
+        }).collect(Collectors.toList());
     }
 }

@@ -9,11 +9,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
-    // Custom query to find expenses by status
     List<Expense> findByStatus(ExpenseStatus status);
 
-    // Custom query to find expenses by employeeId and date range
     @Query("SELECT e FROM Expense e WHERE e.employee.id = :employeeId AND e.submitDate BETWEEN :startDate AND :endDate")
     List<Expense> findByEmployeeIdAndDateRange(int employeeId, LocalDateTime startDate, LocalDateTime endDate);
 
+    List<Expense> findByEmployeeId(int employeeId);
 }

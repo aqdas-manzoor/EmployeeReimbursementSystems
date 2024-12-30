@@ -1,9 +1,7 @@
 package net.demo.projectjpa.employeeexpensereimbursementsystem.controller;
 
 import jakarta.persistence.EntityNotFoundException;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Expense;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseStatus;
-import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseValidationRequest;
+import net.demo.projectjpa.employeeexpensereimbursementsystem.model.*;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +28,6 @@ public class ManagerController {
      *
      * @return a list of objects containing employee and expense information
      */
-    // Get only pending status expenses
     @GetMapping("/employees/expenses")
     public ResponseEntity<List<Expense>> getPendingExpenses() {
         List<Expense> pendingExpenses = employeeService.getAllEmployeesWithExpenses().stream()
@@ -48,10 +45,8 @@ public class ManagerController {
      */
     @GetMapping("/employees/expenses/status")
     public ResponseEntity<List<Expense>> getExpensesByStatus(@RequestParam String statusName) {
-        // Call the service to retrieve expenses filtered by status
         List<Expense> expenses = employeeService.getExpensesByStatus(statusName);
 
-        // Return the list of expenses with the given status
         return ResponseEntity.ok(expenses);
     }
 
@@ -65,14 +60,11 @@ public class ManagerController {
     @PatchMapping("/employee/{expenseId}/status")
     public ResponseEntity<Expense> updateExpenseStatus(@PathVariable int expenseId, @RequestBody ExpenseStatus newStatus) {
         try {
-            // Call the service layer to update the status
             Expense updatedExpense = employeeService.updateExpenseStatus(expenseId, newStatus);
             return ResponseEntity.ok(updatedExpense);
         } catch (EntityNotFoundException ex) {
-            // Handle cases where the entity (Expense or Status) is not found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception ex) {
-            // Handle any other unexpected exceptions
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -82,5 +74,17 @@ public class ManagerController {
         boolean isValid = employeeService.validateExpenseLimit(request.getRoleId(), request.getCategoryPackageId(), request.getExpenseAmount());
         return ResponseEntity.ok(isValid);
     }
-}
 
+
+    @PostMapping("/category-package")
+    public ResponseEntity<CategoryPackage> createCategoryPackage(@RequestBody CategoryPackage categoryPackage) {
+        CategoryPackage createdCategoryPackage = employeeService.createCategoryPackage(categoryPackage);
+        return ResponseEntity.ok(createdCategoryPackage);
+    }
+
+    @PostMapping("/role-category-package")
+    public ResponseEntity<RoleCategoryPackage> createRoleCategoryPackage(@RequestBody RoleCategoryPackage roleCategoryPackage) {
+        RoleCategoryPackage savedRoleCategoryPackage = employeeService.saveRoleCategoryPackage(roleCategoryPackage);
+        return ResponseEntity.ok(savedRoleCategoryPackage);
+    }
+}

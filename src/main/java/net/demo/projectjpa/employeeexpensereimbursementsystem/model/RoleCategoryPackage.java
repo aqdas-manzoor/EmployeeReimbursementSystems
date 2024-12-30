@@ -17,7 +17,6 @@ public class RoleCategoryPackage {
     @JoinColumn(name = "category_package_id", nullable = false)
     private CategoryPackage categoryPackage;
 
-    // Getters and setters
     public int getId() {
         return id;
     }
