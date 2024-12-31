@@ -40,12 +40,12 @@ public class ManagerController {
     /**
      * Retrieves all expenses for employees filtered by the given status.
      *
-     * @param statusName the status of the expenses (e.g., "Pending", "Approved")
+     * @param statusId the status of the expenses (e.g., "Pending", "Approved")
      * @return a list of expenses with the given status
      */
     @GetMapping("/employees/expenses/status")
-    public ResponseEntity<List<Expense>> getExpensesByStatus(@RequestParam String statusName) {
-        List<Expense> expenses = employeeService.getExpensesByStatus(statusName);
+    public ResponseEntity<List<Expense>> getExpensesByStatus(@RequestParam int statusId) {
+        List<Expense> expenses = employeeService.getExpensesByStatus(statusId);
 
         return ResponseEntity.ok(expenses);
     }
@@ -54,13 +54,13 @@ public class ManagerController {
      * PATCH endpoint to update the status of an expense by id
      *
      * @param expenseId
-     * @param newStatus
+     * @param statusId
      * @return
      */
-    @PatchMapping("/employee/{expenseId}/status")
-    public ResponseEntity<Expense> updateExpenseStatus(@PathVariable int expenseId, @RequestBody ExpenseStatus newStatus) {
+    @PatchMapping("/updateStatus")
+    public ResponseEntity<Expense> updateExpenseStatus(@RequestParam int expenseId, @RequestParam int statusId) {
         try {
-            Expense updatedExpense = employeeService.updateExpenseStatus(expenseId, newStatus);
+            Expense updatedExpense = employeeService.updateExpenseStatus(expenseId, statusId);
             return ResponseEntity.ok(updatedExpense);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

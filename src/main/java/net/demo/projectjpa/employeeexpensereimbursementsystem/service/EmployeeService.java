@@ -82,27 +82,18 @@ public class EmployeeService {
     /**
      * Retrieves expenses for all employees filtered by the given expense status.
      *
-     * @param statusName the name of the expense status (e.g., "Approved", "Pending")
+     * @param statusId the name of the expense status (e.g., "Approved", "Pending")
      * @return a list of expenses with the given status
      */
-    public List<Expense> getExpensesByStatus(String statusName) {
-        // Fetch all statuses by the provided name
-        List<ExpenseStatus> statuses = expenseStatusRepository.findByName(statusName);
+    public List<Expense> getExpensesByStatus(int statusId) {
+        // Fetch the status by the provided ID
+        ExpenseStatus status = expenseStatusRepository.findById(statusId)
+                .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: " + statusId));
 
-        if (statuses.isEmpty()) {
-            throw new EntityNotFoundException("Expense Status not found with name: " + statusName);
-        }
-
-        List<Expense> allExpenses = new ArrayList<>();
-
-        for (ExpenseStatus status : statuses) {
-            List<Expense> expenses = expenseRepository.findByStatus(status);
-
-            allExpenses.addAll(expenses);
-        }
-
-        return allExpenses;
+        // Fetch and return all expenses with the given status
+        return expenseRepository.findByStatus(status);
     }
+
 
     /**
      * Updates the status of an expense by its id.
@@ -110,18 +101,18 @@ public class EmployeeService {
      * If the status is "rejected" (ID 3), the approved date is set to null.
      *
      * @param expenseId the id of the expense to update
-     * @param newStatus the new status to set for the expense
+     * @param statusId the new status to set for the expense
      * @return the updated expense
      * @throws EntityNotFoundException  if the expense or status is not found
      * @throws IllegalArgumentException if the status ID is invalid
      */
-    public Expense updateExpenseStatus(int expenseId, ExpenseStatus newStatus) {
+    public Expense updateExpenseStatus(int expenseId, int statusId) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new EntityNotFoundException("Expense not found with ID: " + expenseId));
 
-        ExpenseStatus status = expenseStatusRepository.findById(newStatus.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: " + newStatus.getId()));
-        if (newStatus.getId() < 1 || newStatus.getId() > 3) {
+        ExpenseStatus status = expenseStatusRepository.findById(statusId)
+                .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: " + statusId));
+        if (statusId < 1 || statusId > 3) {
             throw new IllegalArgumentException("Invalid status ID. Allowed values are 1 (Pending), 2 (Approved), or 3 (Rejected).");
         }
 
