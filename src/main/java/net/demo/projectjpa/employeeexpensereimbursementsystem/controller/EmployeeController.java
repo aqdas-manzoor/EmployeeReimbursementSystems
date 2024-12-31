@@ -79,7 +79,7 @@ public class EmployeeController {
      * @param employeeId the ID of the employee
      * @return list of category history with remaining amount
      */
-    @GetMapping("/{employeeId}/history")
+    @GetMapping("/history/{employeeId}")
     public List<Map<String, Object>> getEmployeeHistoryByCategory(@PathVariable int employeeId) {
         return employeeService.getEmployeeHistoryByCategory(employeeId);
     }

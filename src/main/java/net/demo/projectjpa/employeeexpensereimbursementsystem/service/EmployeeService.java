@@ -164,28 +164,36 @@ public class EmployeeService {
      * Fetch all expenses for the employee , Group expenses by category ID and calculate the total submitted amount for each category
      */
     public List<Map<String, Object>> getEmployeeHistoryByCategory(int employeeId) {
+        // Fetch employee by ID
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found with ID: " + employeeId));
 
+        // Fetch role for the employee
         Role role = employee.getRole();
 
+        // Fetch role-based category packages
         List<RoleCategoryPackage> roleCategoryPackages = roleCategoryPackageRepository.findByRoleId(role.getId());
 
+        // Fetch all expenses for the employee
         List<Expense> expenses = expenseRepository.findByEmployeeId(employeeId);
+
+        // Group expenses by category and calculate total submitted amount for each category
         Map<Integer, Integer> categoryExpenseMap = expenses.stream()
                 .collect(Collectors.groupingBy(expense -> expense.getCategory().getId(),
                         Collectors.summingInt(Expense::getAmount)));
 
-        return roleCategoryPackages.stream().map(roleCategoryPackage -> {
+        // Process roleCategoryPackages and map to category history
+        List<Map<String, Object>> categoryHistories = roleCategoryPackages.stream().map(roleCategoryPackage -> {
             CategoryPackage categoryPackage = roleCategoryPackage.getCategoryPackage();
             int categoryId = categoryPackage.getCategory().getId();
             String categoryName = categoryPackage.getCategory().getName();
             int expenseLimit = categoryPackage.getExpenseLimit();
 
+            // Calculate total submitted amount and remaining amount
             int totalSubmittedAmount = categoryExpenseMap.getOrDefault(categoryId, 0);
-
             int remainingAmount = expenseLimit - totalSubmittedAmount;
 
+            // Prepare category history map
             Map<String, Object> categoryHistory = new HashMap<>();
             categoryHistory.put("categoryName", categoryName);
             categoryHistory.put("totalSubmittedAmount", totalSubmittedAmount);
@@ -197,5 +205,11 @@ public class EmployeeService {
 
             return categoryHistory;
         }).collect(Collectors.toList());
+
+        // Sort the list of category histories by categoryName
+        categoryHistories.sort(Comparator.comparing(history -> (String) history.get("categoryName")));
+
+        return categoryHistories;
     }
+
 }
