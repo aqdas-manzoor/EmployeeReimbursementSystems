@@ -4,6 +4,7 @@ import net.demo.projectjpa.employeeexpensereimbursementsystem.model.Expense;
 import net.demo.projectjpa.employeeexpensereimbursementsystem.model.ExpenseStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,4 +16,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
     List<Expense> findByEmployeeIdAndDateRange(int employeeId, LocalDateTime startDate, LocalDateTime endDate);
 
     List<Expense> findByEmployeeId(int employeeId);
+
+    @Query("SELECT e FROM Expense e WHERE e.status.id = :statusId ORDER BY e.submitDate DESC")
+    List<Expense> findByStatusId(@Param("statusId") int statusId);
 }

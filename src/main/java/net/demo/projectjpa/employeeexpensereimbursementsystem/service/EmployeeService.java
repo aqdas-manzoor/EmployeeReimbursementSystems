@@ -66,6 +66,7 @@ public class EmployeeService {
 
         return expenseRepository.save(expense);
     }
+
     public CategoryPackage createCategoryPackage(CategoryPackage categoryPackage) {
         return categoryPackageRepository.save(categoryPackage);
     }
@@ -82,16 +83,17 @@ public class EmployeeService {
     /**
      * Retrieves expenses for all employees filtered by the given expense status.
      *
-     * @param statusId the name of the expense status (e.g., "Approved", "Pending")
-     * @return a list of expenses with the given status
+     * @param statusId the status of the expenses (e.g., "Pending", "Approved")
+     * @return a list of expenses with the given status, ordered by submitDate in descending order(most recent date will
+     * appear at the top of the list,
      */
     public List<Expense> getExpensesByStatus(int statusId) {
         // Fetch the status by the provided ID
         ExpenseStatus status = expenseStatusRepository.findById(statusId)
                 .orElseThrow(() -> new EntityNotFoundException("Expense Status not found with ID: " + statusId));
 
-        // Fetch and return all expenses with the given status
-        return expenseRepository.findByStatus(status);
+        // Fetch and return all expenses with the given status, ordered by submitDate in descending order
+        return expenseRepository.findByStatusId(statusId);
     }
 
 
@@ -101,7 +103,7 @@ public class EmployeeService {
      * If the status is "rejected" (ID 3), the approved date is set to null.
      *
      * @param expenseId the id of the expense to update
-     * @param statusId the new status to set for the expense
+     * @param statusId  the new status to set for the expense
      * @return the updated expense
      * @throws EntityNotFoundException  if the expense or status is not found
      * @throws IllegalArgumentException if the status ID is invalid
