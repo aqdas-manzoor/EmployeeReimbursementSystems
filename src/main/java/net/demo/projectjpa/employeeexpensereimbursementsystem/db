@@ -1,0 +1,128 @@
+
+CREATE DATABASE expense_reimbursement_system;
+USE expense_reimbursement_system;
+Drop Database expense_reimbursement_system;
+SHOW TABLES;
+CREATE TABLE employee(
+id int auto_increment KEY PRIMARY KEY,
+name varchar(50),
+email varchar(50),
+role_id int,
+foreign key (role_id) references role(id)
+);
+
+INSERT INTO employee (name, email,role_id) VALUES ('Asim Yaqub', 'asim.yaqub@seamless.se',1);
+INSERT INTO employee (name, email,role_id) VALUES ('Almas Saleem', 'almas.saleem@seamless.se',2);
+INSERT INTO employee (name, email,role_id) VALUES ('Aqdas Manzoor', 'aqdas.manzoor@seamless.se',3);
+INSERT INTO employee (name, email,role_id) VALUES ('Kashaf', 'kashaf.sajid@seamless.se',3);
+
+select * from employee;
+
+CREATE TABLE role(
+id int auto_increment KEY PRIMARY KEY,
+name varchar(50),
+status bit
+);
+INSERT INTO role (name, status) VALUES ('HR', 1);
+INSERT INTO role (name, status) VALUES ('Cluster Manager', 1);
+INSERT INTO role (name, status) VALUES ('Senior Software Engineer', 1);
+INSERT INTO role (name, status) VALUES ('Technical Lead', 1);
+TRUNCATE TABLE role;
+select * from role;
+
+CREATE TABLE categories(
+id int auto_increment KEY PRIMARY KEY,
+name varchar(50),
+status bit
+);
+
+INSERT INTO categories (name, status) VALUES ('Travel', 1);
+INSERT INTO categories (name, status) VALUES ('Medical', 1);
+INSERT INTO categories (name, status) VALUES ('Meals', 1);
+
+
+select * from categories;
+
+CREATE TABLE expense_status(
+id int auto_increment KEY PRIMARY KEY,
+name varchar(50),
+status bit
+);
+
+INSERT INTO expense_status (name, status) VALUES ('pending', 1);
+INSERT INTO expense_status (name, status) VALUES ('Approved', 1);
+INSERT INTO expense_status (name, status) VALUES ('Rejected', 1);
+
+select * from expense_status;
+
+CREATE TABLE expense(
+id int auto_increment KEY PRIMARY KEY,
+employee_id int,
+amount int,
+description varchar(500),
+category_id int,
+status_id int,
+submitDate dateTime,
+approvalDate dateTime,
+foreign key (employee_id) references employee(id),
+foreign key (category_id) references categories(id),
+foreign key (status_id) references expense_status(id)
+);
+
+CREATE TABLE category_package (
+   id int auto_increment KEY PRIMARY KEY,
+   category_id int NOT NULL,
+   package_name varchar(50) NOT NULL,
+   expense_limit int NOT NULL,
+   FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE role_category_package (
+   id int auto_increment KEY PRIMARY KEY,
+   role_id int NOT NULL,
+   category_package_id int NOT NULL,
+   FOREIGN KEY (role_id) REFERENCES role(id),
+   FOREIGN KEY (category_package_id) REFERENCES category_package(id)
+);
+INSERT INTO category_package (category_id, package_name, expense_limit)
+VALUES
+(1, 'Basic', 3000),  -- TRAVEL
+	(1, 'Premium', 7000),
+   (1, 'Deluxe', 40000),
+   (2, 'Basic', 1000),  -- MEDICAL
+   (2, 'Premium', 5000),
+    (2, 'Delux', 30000),
+   (3, 'Basic', 2000),  -- MEALS
+	(3, 'Premium', 5000),
+   (3, 'Deluxe', 8000);
+
+   select * from category_package;
+   select * from employee;
+   INSERT INTO role_category_package (role_id, category_package_id)
+VALUES
+(1,2), -- HR
+(1,5),
+(1,8),
+ (2,3), -- CLUSTER MANAGER
+  (2,6),
+  (2,9),
+   (3, 1),  -- SENIOR SOFTWARE ENGINEER
+   (3, 4),
+   (3, 7),
+   (3, 2), -- Technical Lead
+    (1, 5),
+    (1, 8);
+
+
+
+select * from role_category_package;
+select * from expense;
+SELECT * FROM expense
+Inner JOIN employee ON expense.employee_id = employee.id INNER JOIN category_package ON employee.id=category_package.id;
+
+DESCRIBE Table expense;
+SELECT * FROM expense;
+SELECT * FROM role;
+SELECT * FROM role_category_package;
+SELECT * FROM category_package;
+SELECT * FROM expense;
