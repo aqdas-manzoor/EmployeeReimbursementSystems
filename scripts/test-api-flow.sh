@@ -1,16 +1,35 @@
 #!/bin/bash
 # Employee Expense Reimbursement System — API test flow
-# Prerequisites:
-#   - App running: ./mvnw spring-boot:run -s settings-local.xml
-#   - MySQL DB seeded via src/main/resources/data.sql (roles, categories, statuses, employee)
+#
+# =============================================================================
+# PREREQUISITES
+# =============================================================================
+# Software:
+#   - Java JDK 23
+#   - MySQL on localhost:3306
+#   - Database: expense_reimbursement_system (see scripts/setup-database-from-scratch.sql)
+#
+# Start app:
+#   ./mvnw spring-boot:run -s settings-local.xml
+#
+# Static DB tables (auto-loaded from src/main/resources/data.sql on startup):
+#   role, categories, expense_status, employee, category_package, role_category_package
+#   expense table starts empty — filled via API
+#
+# Static IDs for testing:
+#   employee=1, category Travel=1, status Pending=1/Approved=2/Rejected=3
+#   role_category_package=1 (for validateExpense)
+#
+# Full setup guide: scripts/setup-database-from-scratch.sql
 # Base URL: http://localhost:8080
+# =============================================================================
 
-# 1. Setup — create category spending package (Travel limit = 5000 for Developer)
+# 1. Setup — create category spending package (SKIP if data.sql already seeded)
 curl -X POST http://localhost:8080/manager/category-package \
   -H "Content-Type: application/json" \
   -d '{"category":{"id":1},"packageName":"Dev Travel","expenseLimit":5000}'
 
-# 2. Link role — assign category package to Developer role (role id=1, package id=1)
+# 2. Link role — assign category package to Developer role (SKIP if data.sql already seeded)
 curl -X POST http://localhost:8080/manager/role-category-package \
   -H "Content-Type: application/json" \
   -d '{"role":{"id":1},"categoryPackage":{"id":1}}'
